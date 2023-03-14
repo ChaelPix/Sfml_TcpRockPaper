@@ -34,18 +34,35 @@ int main()
             if (r == 'n') return 0;
         }
 
-         std::cout << "l'utilisateur a rejoint ! \n en attente... \n";
+        std::cout << "l'utilisateur a rejoint !" << std::endl
+            << "Ip : " << client.getRemoteAddress() << std::endl
+            << "Port : " << client.getRemotePort() << std::endl;
 
-         sf::TcpSocket socket;
-         char data[100];
-         std::size_t received;
+        sf::TcpSocket socket;
+        socket.setBlocking(true);
 
-         // TCP socket:
-         while (socket.receive(data, 100, received) != sf::Socket::Done) {}
-         std::cout << "Received " << received << " bytes : " << data << std::endl;
+        if (socket.connect(client.getRemoteAddress(), client.getRemotePort(), sf::seconds(2)) != sf::Socket::Done)
+        {
+            // error...
+
+            return 0;
+        }
+        else {
+            std::cout << "connected to client \n";
+        }
+        
+        int x;
+        sf::Packet packet;
+
+        // TCP socket:
+        while(socket.receive(packet) != sf::Socket::Done) std::cout <<"erreur de recu \n";
+        packet >> x;
+        std::cout << "Received " << x << std::endl;
     }
     else {
         sf::TcpSocket socket;
+        socket.setBlocking(true);
+
         std::string ipAdr;
         int port;
 
@@ -54,6 +71,8 @@ int main()
         std::cout << "Entrez le port : ";
         std::cin >> port;
 
+        ipAdr = "127.0.0.1"; port = 4444;
+
         while (socket.connect(sf::IpAddress(ipAdr), port, sf::seconds(2)) != sf::Socket::Done) {
             std::cout << "erreur de connection" << std::endl;
             std::cout << "retenter (o/n) ? " << std::flush;
@@ -61,18 +80,75 @@ int main()
             if (r == 'n') return 0;
         }
 
-        char toSend[100];
-        std::cout << "Ecrit un mot a envoyer : ";
-        std::cin.getline(toSend, 99);
+        int x = 5;
+        sf::Packet packet;
+        packet << x;
 
-        if(socket.send(toSend, 100) != sf::Socket::Done);
-        {
-            std::cout << "Erreur d'envoie";
-        }
+        std::cin >> x;
+
+        while(socket.send(packet) != sf::Socket::Done) std::cout << "erreur de envoie \n";
+        std::cout << "Message envoyé !";
     }
 
     std::cout << std::endl << mode;
     return 0;
+}
+
+
+void TCP()
+{
+    
+}
+
+int UDP()
+{
+
+    char mode = GetMode();
+
+    if (mode == 'h')
+    {
+        sf::UdpSocket socket;
+        socket.setBlocking(true);
+
+        // bind the socket to a port
+        if (socket.bind(4444) != sf::Socket::Done)
+        {
+            // error...
+            std::cout << "erreur port"; return -1;
+        }
+        std::cout << "port binded \n";
+
+        sf::IpAddress sender;
+        unsigned short port;
+
+
+        int result;
+        sf::Packet packet;
+
+        if (socket.receive(packet, sender, port) != sf::Socket::Done)
+        {
+            std::cout << "erreur reçu"; return -1;
+        }
+        packet >> result;
+        std::cout << "Message : " << result;
+    }
+    else {
+        sf::UdpSocket socket;
+        socket.setBlocking(true);
+        int result = 2;
+        sf::Packet packet;
+        packet << result;
+
+        sf::IpAddress recipient = "127.0.0.1";
+        unsigned short port = 4444;
+        if (socket.send(packet, recipient, port) != sf::Socket::Done)
+        {
+            std::cout << "erreur envoie"; return -1;
+        }
+        std::cout << "message envoyé";
+
+
+    }
 }
 
 void Game()
