@@ -1,9 +1,81 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Network.hpp>
 
 #include <iostream>
+#include <string>
 #include "Functions.h"
 
+void Game();
+
 int main()
+{
+    char mode = GetMode();
+
+    if (mode == 'h')
+    {
+        sf::TcpListener listener;
+
+        // bind the listener to a port
+        if (listener.listen(4444) != sf::Socket::Done)
+        {
+            // error...
+            std::cout << "cant listen";
+        }
+        else {
+            std::cout << "listener binded \n";
+        }
+
+        // accept a new connection
+        sf::TcpSocket client;
+        while (listener.accept(client) != sf::Socket::Done)
+        {
+            std::cout << "try again (y/n) ? " << std::flush;
+            char r; std::cin >> r;
+            if (r == 'n') return 0;
+        }
+
+         std::cout << "l'utilisateur a rejoint ! \n en attente... \n";
+
+         sf::TcpSocket socket;
+         char data[100];
+         std::size_t received;
+
+         // TCP socket:
+         while (socket.receive(data, 100, received) != sf::Socket::Done) {}
+         std::cout << "Received " << received << " bytes : " << data << std::endl;
+    }
+    else {
+        sf::TcpSocket socket;
+        std::string ipAdr;
+        int port;
+
+        std::cout << "Entrez l'@ ip de l'host : ";
+        std::cin >> ipAdr;
+        std::cout << "Entrez le port : ";
+        std::cin >> port;
+
+        while (socket.connect(sf::IpAddress(ipAdr), port, sf::seconds(2)) != sf::Socket::Done) {
+            std::cout << "erreur de connection" << std::endl;
+            std::cout << "retenter (o/n) ? " << std::flush;
+            char r; std::cin >> r;
+            if (r == 'n') return 0;
+        }
+
+        char toSend[100];
+        std::cout << "Ecrit un mot a envoyer : ";
+        std::cin.getline(toSend, 99);
+
+        if(socket.send(toSend, 100) != sf::Socket::Done);
+        {
+            std::cout << "Erreur d'envoie";
+        }
+    }
+
+    std::cout << std::endl << mode;
+    return 0;
+}
+
+void Game()
 {
     sf::Vector2f windowSize(1280, 720);
 
@@ -19,26 +91,26 @@ int main()
     sf::RectangleShape paper(sf::Vector2f(120, 120));
     paper.setTexture(&paperTexture);
     paper.setOrigin(60, 60);
-    paper.setPosition(windowSize.x/2, windowSize.y/2 + 120);
+    paper.setPosition(windowSize.x / 2, windowSize.y / 2 + 120);
 
-        //rock
+    //rock
     sf::RectangleShape stone(sf::Vector2f(120, 120));
     stone.setTexture(&stoneTexture);
     stone.setOrigin(60, 60);
     stone.setPosition(windowSize.x / 2 - 240, windowSize.y / 2 + 120);
 
-        //scissors
+    //scissors
     sf::RectangleShape scissors(sf::Vector2f(120, 120));
     scissors.setTexture(&scissorsTexture);
     scissors.setOrigin(60, 60);
     scissors.setPosition(windowSize.x / 2 + 240, windowSize.y / 2 + 120);
 
-        //green circle
+    //green circle
     sf::CircleShape choiceCircle(80);
     choiceCircle.setFillColor(sf::Color::Green);
     choiceCircle.setOrigin(choiceCircle.getGlobalBounds().width / 2, choiceCircle.getGlobalBounds().height / 2);
 
-        //Ennemy choice
+    //Ennemy choice
     sf::RectangleShape opponentChoice(sf::Vector2f(120, 120));
     opponentChoice.setOrigin(60, 60);
     opponentChoice.setPosition(550, windowSize.y - 50);
@@ -57,14 +129,14 @@ int main()
     pickObjectTxt.setOrigin(pickObjectTxt.getGlobalBounds().width / 2, pickObjectTxt.getGlobalBounds().height / 2);
     pickObjectTxt.setPosition(windowSize.x / 2, windowSize.y / 2 - 120);
 
-        //Ennemy choice
+    //Ennemy choice
     sf::Text opponentChoiceTxt = pickObjectTxt;
     opponentChoiceTxt.setCharacterSize(15);
     opponentChoiceTxt.setString("Your opponent has choosen : ");
     opponentChoiceTxt.setOrigin(0, 0);
     opponentChoiceTxt.setPosition(25, windowSize.y - 50);
 
-        //Won/loose
+    //Won/loose
     sf::Text resultText = opponentChoiceTxt;
     resultText.setCharacterSize(25);
     resultText.setString("");
@@ -93,7 +165,7 @@ int main()
         mousePosition = sf::Vector2f(sf::Mouse::getPosition(window));
 
         //Choose
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) 
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
         {
             if (isClickReleased)
             {
@@ -124,6 +196,4 @@ int main()
 
         window.display();
     }
-
-    return 0;
 }

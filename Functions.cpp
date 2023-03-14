@@ -3,17 +3,44 @@
 
 sf::Texture GetTextureFromFile(std::string filename)
 {
-    sf::Texture textureToLoad;
-    std::string path = "Ressources/" + filename;
-    textureToLoad.loadFromFile(path);
+	sf::Texture textureToLoad;
+	std::string path = "Ressources/" + filename;
+	textureToLoad.loadFromFile(path);
 
-    return textureToLoad;
+	return textureToLoad;
 }
 
-int SetChoosenElement(int id, sf::CircleShape &circle, sf::Vector2f elementPos)
+int SetChoosenElement(int id, sf::CircleShape& circle, sf::Vector2f elementPos)
 {
-    circle.setPosition(elementPos);
+	circle.setPosition(elementPos);
+	return id;
+}
 
+char GetMode()
+{
+	char mode;
 
-    return id;
+	bool isCorrectInput = false;
+
+	while (!isCorrectInput)
+	{
+		system("cls");
+		std::cout << "Do you want to be the Host or join a server ? "
+			<< std::endl << "[H] Host"
+			<< std::endl << "[J] Join"
+			<< std::endl;
+
+		std::cin >> mode;
+
+		switch (mode)
+		{
+			case 'h':
+			case 'H': mode = 'h'; isCorrectInput = true; break;
+			case 'j':
+			case 'J': mode = 'j'; isCorrectInput = true;
+		}
+	}
+
+	return mode;
+
 }
