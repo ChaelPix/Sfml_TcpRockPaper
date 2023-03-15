@@ -7,7 +7,17 @@
 
 void Game();
 
+int TCP();
+int UDP();
+
+
 int main()
+{
+    TCP();
+}
+
+
+int TCP()
 {
     char mode = GetMode();
 
@@ -38,26 +48,45 @@ int main()
             << "Ip : " << client.getRemoteAddress() << std::endl
             << "Port : " << client.getRemotePort() << std::endl;
 
-        sf::TcpSocket socket;
-        socket.setBlocking(true);
 
-        if (socket.connect(client.getRemoteAddress(), client.getRemotePort(), sf::seconds(2)) != sf::Socket::Done)
-        {
-            // error...
-
-            return 0;
-        }
-        else {
-            std::cout << "connected to client \n";
-        }
-        
-        int x;
+        std::string x;
         sf::Packet packet;
+        std::string y;
 
-        // TCP socket:
-        while(socket.receive(packet) != sf::Socket::Done) std::cout <<"erreur de recu \n";
-        packet >> x;
-        std::cout << "Received " << x << std::endl;
+        while (true)
+        {
+            packet.clear();
+            x.clear();
+            y.clear();
+
+            // TCP socket:
+            if (client.receive(packet) == sf::Socket::Done) {
+
+            }
+
+            packet >> x;
+            std::cout << "Message Recu : " << x << std::endl;
+
+            std::cout << "Message a envoyer : ";
+
+            packet.clear();
+
+            std::cin.ignore(1);
+            std::getline(std::cin, y);
+
+            packet << y;
+
+            if (client.send(packet) != sf::Socket::Done)
+            {
+                //error
+            }
+
+            std::cout << std::endl;
+       }
+
+
+
+        return 0;
     }
     else {
         sf::TcpSocket socket;
@@ -71,7 +100,7 @@ int main()
         std::cout << "Entrez le port : ";
         std::cin >> port;
 
-        ipAdr = "127.0.0.1"; port = 4444;
+       // ipAdr = "127.0.0.1"; port = 4444;
 
         while (socket.connect(sf::IpAddress(ipAdr), port, sf::seconds(2)) != sf::Socket::Done) {
             std::cout << "erreur de connection" << std::endl;
@@ -80,29 +109,48 @@ int main()
             if (r == 'n') return 0;
         }
 
-        int x = 5;
-        sf::Packet packet;
-        packet << x;
+        std::string x ;
+        sf::Packet packet; 
+        std::string y;
 
-        std::cin >> x;
+        while (true)
+        {
+            packet.clear();
+            x.clear();
+            y.clear();
 
-        while(socket.send(packet) != sf::Socket::Done) std::cout << "erreur de envoie \n";
-        std::cout << "Message envoyé !";
+            std::cout << "Message a envoyer : ";
+            
+            std::cin.ignore();
+            std::getline(std::cin, x);
+
+            packet << x;
+
+            socket.send(packet);
+
+            //if (socket.send(packet) != sf::Socket::Done) std::cout << "erreur de envoie \n";
+            //std::cout << "Message envoyé ! \n";
+
+            
+            packet.clear();
+            if (socket.receive(packet) != sf::Socket::Done)
+            {
+
+            }
+
+            packet >> y;
+            std::cout << "Message recu : " << y << std::endl << std::endl;
+        }
+
+       
+
     }
 
-    std::cout << std::endl << mode;
     return 0;
-}
-
-
-void TCP()
-{
-    
 }
 
 int UDP()
 {
-
     char mode = GetMode();
 
     if (mode == 'h')
@@ -147,8 +195,9 @@ int UDP()
         }
         std::cout << "message envoyé";
 
-
     }
+
+    return 0;
 }
 
 void Game()
