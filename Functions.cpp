@@ -44,3 +44,14 @@ char GetMode()
 	return mode;
 
 }
+
+int GetResult(int choice, int opponentChoice)
+{
+	int result = -1; //lose
+	if (choice == opponentChoice)
+		result = 0; //draw
+	else if ((choice + 1) % 3 == opponentChoice)
+		result = 1; //win
+
+	return result;
+}

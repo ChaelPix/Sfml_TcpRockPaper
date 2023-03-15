@@ -3,208 +3,59 @@
 
 #include <iostream>
 #include <string>
+
 #include "Functions.h"
+#include "Host.h"
+#include "Client.h"
 
-void Game();
-
-int TCP();
-int UDP();
-
+Host host;
+Client client;
+bool isHost = false;
+int result;
 
 int main()
 {
-    TCP();
-}
-
-
-int TCP()
-{
     char mode = GetMode();
 
     if (mode == 'h')
     {
-        sf::TcpListener listener;
+        isHost = true;
 
-        // bind the listener to a port
-        if (listener.listen(4444) != sf::Socket::Done)
+        //bind port
+        if (!host.BindListener())
         {
-            // error...
-            std::cout << "cant listen";
-        }
-        else {
-            std::cout << "listener binded \n";
-        }
+            std::cout << "Binding Port error...";
+            return -1;
+        } std::cout << "Port binded!" << std::endl;
 
-        // accept a new connection
-        sf::TcpSocket client;
-        while (listener.accept(client) != sf::Socket::Done)
+
+        //connect to client
+        if (!host.AcceptClient())
         {
-            std::cout << "try again (y/n) ? " << std::flush;
-            char r; std::cin >> r;
-            if (r == 'n') return 0;
-        }
-
-        std::cout << "l'utilisateur a rejoint !" << std::endl
-            << "Ip : " << client.getRemoteAddress() << std::endl
-            << "Port : " << client.getRemotePort() << std::endl;
-
-
-        std::string x;
-        sf::Packet packet;
-        std::string y;
-
-        while (true)
-        {
-            packet.clear();
-            x.clear();
-            y.clear();
-
-            // TCP socket:
-            if (client.receive(packet) == sf::Socket::Done) {
-
-            }
-
-            packet >> x;
-            std::cout << "Message Recu : " << x << std::endl;
-
-            std::cout << "Message a envoyer : ";
-
-            packet.clear();
-
-            std::cin.ignore(1);
-            std::getline(std::cin, y);
-
-            packet << y;
-
-            if (client.send(packet) != sf::Socket::Done)
-            {
-                //error
-            }
-
-            std::cout << std::endl;
-       }
-
-
-
-        return 0;
-    }
-    else {
-        sf::TcpSocket socket;
-        socket.setBlocking(true);
-
-        std::string ipAdr;
-        int port;
-
-        std::cout << "Entrez l'@ ip de l'host : ";
-        std::cin >> ipAdr;
-        std::cout << "Entrez le port : ";
-        std::cin >> port;
-
-       // ipAdr = "127.0.0.1"; port = 4444;
-
-        while (socket.connect(sf::IpAddress(ipAdr), port, sf::seconds(2)) != sf::Socket::Done) {
-            std::cout << "erreur de connection" << std::endl;
-            std::cout << "retenter (o/n) ? " << std::flush;
-            char r; std::cin >> r;
-            if (r == 'n') return 0;
-        }
-
-        std::string x ;
-        sf::Packet packet; 
-        std::string y;
-
-        while (true)
-        {
-            packet.clear();
-            x.clear();
-            y.clear();
-
-            std::cout << "Message a envoyer : ";
-            
-            std::cin.ignore();
-            std::getline(std::cin, x);
-
-            packet << x;
-
-            socket.send(packet);
-
-            //if (socket.send(packet) != sf::Socket::Done) std::cout << "erreur de envoie \n";
-            //std::cout << "Message envoyé ! \n";
-
-            
-            packet.clear();
-            if (socket.receive(packet) != sf::Socket::Done)
-            {
-
-            }
-
-            packet >> y;
-            std::cout << "Message recu : " << y << std::endl << std::endl;
-        }
-
-       
+            std::cout << "Synchro error...";
+            return -2;
+        } std::cout << "Client Found!" << std::endl;
 
     }
+    else client.ConnectToHost();
+
+    Game();
 
     return 0;
 }
 
-int UDP()
-{
-    char mode = GetMode();
-
-    if (mode == 'h')
-    {
-        sf::UdpSocket socket;
-        socket.setBlocking(true);
-
-        // bind the socket to a port
-        if (socket.bind(4444) != sf::Socket::Done)
-        {
-            // error...
-            std::cout << "erreur port"; return -1;
-        }
-        std::cout << "port binded \n";
-
-        sf::IpAddress sender;
-        unsigned short port;
-
-
-        int result;
-        sf::Packet packet;
-
-        if (socket.receive(packet, sender, port) != sf::Socket::Done)
-        {
-            std::cout << "erreur reçu"; return -1;
-        }
-        packet >> result;
-        std::cout << "Message : " << result;
-    }
-    else {
-        sf::UdpSocket socket;
-        socket.setBlocking(true);
-        int result = 2;
-        sf::Packet packet;
-        packet << result;
-
-        sf::IpAddress recipient = "127.0.0.1";
-        unsigned short port = 4444;
-        if (socket.send(packet, recipient, port) != sf::Socket::Done)
-        {
-            std::cout << "erreur envoie"; return -1;
-        }
-        std::cout << "message envoyé";
-
-    }
-
-    return 0;
-}
 
 void Game()
 {
     sf::Vector2f windowSize(1280, 720);
 
     sf::RenderWindow window(sf::VideoMode(windowSize.x, windowSize.y), "TCP : Pierre Feuille Ciseaux !");
+   
+    //Icon
+    sf::Image icon;
+    icon.loadFromFile("Ressources/Icon.png");
+    window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
+
 
     //Textures
     sf::Texture paperTexture = GetTextureFromFile("paper.png");
@@ -217,7 +68,6 @@ void Game()
     paper.setTexture(&paperTexture);
     paper.setOrigin(60, 60);
     paper.setPosition(windowSize.x / 2, windowSize.y / 2 + 120);
-
     //rock
     sf::RectangleShape stone(sf::Vector2f(120, 120));
     stone.setTexture(&stoneTexture);
@@ -238,7 +88,7 @@ void Game()
     //Ennemy choice
     sf::RectangleShape opponentChoice(sf::Vector2f(120, 120));
     opponentChoice.setOrigin(60, 60);
-    opponentChoice.setPosition(550, windowSize.y - 50);
+    opponentChoice.setPosition(325, windowSize.y - 65);
 
     //Font
     sf::Font font;
@@ -257,16 +107,24 @@ void Game()
     //Ennemy choice
     sf::Text opponentChoiceTxt = pickObjectTxt;
     opponentChoiceTxt.setCharacterSize(15);
-    opponentChoiceTxt.setString("Your opponent has choosen : ");
+    opponentChoiceTxt.setString("");
     opponentChoiceTxt.setOrigin(0, 0);
     opponentChoiceTxt.setPosition(25, windowSize.y - 50);
 
     //Won/loose
     sf::Text resultText = opponentChoiceTxt;
-    resultText.setCharacterSize(25);
+    resultText.setCharacterSize(50);
     resultText.setString("");
     resultText.setOrigin(0, 0);
-    resultText.setPosition(850, windowSize.y - 35);
+    resultText.setPosition(850, windowSize.y - 100);
+
+    //Restart
+    sf::Text restartText = opponentChoiceTxt;
+    restartText.setCharacterSize(25);
+    restartText.setString("Press R to restart");
+    restartText.setOrigin(resultText.getGlobalBounds().width / 2, resultText.getGlobalBounds().height / 2);
+    restartText.setPosition(windowSize.x/2 - 100, 100);
+
 
     //Game Variables
     bool hasChoosenElement = false;
@@ -308,10 +166,29 @@ void Game()
         }
         else isClickReleased = true;
 
-        if (hasChoosenElement) window.draw(choiceCircle);
-        if (hasOpponentChoosen) window.draw(opponentChoiceTxt);
+        //Restart
+        if (hasChoosenElement && hasOpponentChoosen && sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+        {
+            hasChoosenElement = false;
+            hasOpponentChoosen = false;
+            opponentChoiceTxt.setString("");
+            resultText.setString("");
+        }
 
-        window.draw(opponentChoice);
+        //Wait opponent
+        if (hasChoosenElement && !hasOpponentChoosen)
+            opponentChoiceTxt.setString("Waiting Opponent..."); 
+        
+        //Draw
+        if (hasChoosenElement) window.draw(choiceCircle);
+        window.draw(opponentChoiceTxt);
+
+        if (hasChoosenElement && hasOpponentChoosen)
+        {
+            window.draw(restartText);
+            window.draw(opponentChoice);
+        }
+       
         window.draw(resultText);
         window.draw(paper);
         window.draw(stone);
@@ -320,5 +197,44 @@ void Game()
         window.draw(pickObjectTxt);
 
         window.display();
+
+        //Check Result
+        if (hasChoosenElement && !hasOpponentChoosen)
+        {
+            hasOpponentChoosen = true;
+            int opponentChoiceId;
+
+            //Get Other player Choice and compare results
+            if (isHost) //Can be optimized.....
+            {
+                host.SendPacket(elementChoosenId);
+                opponentChoiceId = host.ReceivePacket();
+
+                result = GetResult(elementChoosenId, opponentChoiceId);
+            }
+            else {
+                client.SendPacket(elementChoosenId);
+                opponentChoiceId = client.ReceivePacket();
+
+                result = GetResult(elementChoosenId, opponentChoiceId);
+            }
+
+            //Write if you won
+            switch (result)
+            {
+                case -1: resultText.setString("You lost..."); break;
+                case 0: resultText.setString("Draw..."); break;
+                case 1: resultText.setString("You won !"); break;
+            }
+
+            //show opponent choice in sprite
+            opponentChoiceTxt.setString("Opponent choice : ");
+            switch (opponentChoiceId)
+            {
+                case 0: opponentChoice.setTexture(&paperTexture, true); break;
+                case 1: opponentChoice.setTexture(&stoneTexture, true); break;
+                case 2: opponentChoice.setTexture(&scissorsTexture, true); break;
+            }
+        }
     }
 }

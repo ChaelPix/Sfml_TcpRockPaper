@@ -6,20 +6,23 @@
 class Host
 {
 	private: 
-		sf::TcpListener listener;
+		
 		sf::TcpSocket client;
 
 		std::string clientAdress, clientPort;
 
 	public:
+		sf::TcpListener listener;
+
+		Host();
 
 		bool BindListener();
 
 		bool AcceptClient();
 
-		sf::Packet ReceivePacket();
+		int ReceivePacket();
 
-		bool SendPacket(sf::Packet packet);
+		bool SendPacket(int result);
 
 };
 

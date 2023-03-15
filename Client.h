@@ -12,7 +12,13 @@ class Client
 		sf::TcpSocket socket;
 
 	public :
+		
+		Client();
 
 		bool ConnectToHost();
+
+		int ReceivePacket();
+
+		bool SendPacket(int result);
 };
 
